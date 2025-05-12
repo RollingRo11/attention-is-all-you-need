@@ -28,7 +28,10 @@ The scaling factor of $\frac{1}{\sqrt{d_k}}$ is used to prevent the dot products
 
 Implemented like so:
 ```Python
- wei = q @ k.transpose(-2, -1) * (C**-0.5)
+wei = q @ k.transpose(-2, -1) * (C**-0.5)
+wei = wei.masked_fill(self.tril[:T, :T] == 0, float("-inf"))
+wei = F.softmax(wei, dim=1)
+wei = self.dropout(wei)
 ```
 
 ### Multi-Head Attention
@@ -41,6 +44,8 @@ where $\text{head}_i = \text{Attention}(QW_i^Q, KW_i^K, VW_i^V)$
 
 
 ## Implementation
+
+The most important implementation is the Multihead Attention, found alongside all of the other most relevant code in [`layers.py`](https://github.com/RollingRo11/attention-is-all-you-need/blob/main/layers.py).
 
 ```python
 class MultiHeadAttention(nn.Module):
@@ -55,6 +60,8 @@ class MultiHeadAttention(nn.Module):
         out = self.proj(out)
         return out
 ```
+
+
 
 ## Key Components
 
